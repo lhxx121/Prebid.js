@@ -640,6 +640,22 @@ export const spec = {
     }
 
     if (syncOptions.iframeEnabled) {
+      window.addEventListener('message', function handler(event) {
+        if (!event.data || event.origin != 'https://asset.popin.cc') {
+          return;
+        }
+
+        this.removeEventListener('message', handler);
+
+        event.stopImmediatePropagation();
+
+        const response = event.data;
+        if (!response.optout && response.mguid) {
+          storage.setCookie(COOKIE_KEY_MGUID, response.mguid, COOKIE_RETENTION_TIME);
+        } else {
+          storage.setCookie(COOKIE_KEY_MGUID, '', 0);
+        }
+      }, true);
       return [
         {
           type: 'iframe',
