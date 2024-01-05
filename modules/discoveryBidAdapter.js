@@ -651,7 +651,9 @@ export const spec = {
 
         const response = event.data;
         if (!response.optout && response.mguid) {
-          storage.setCookie(COOKIE_KEY_MGUID, response.mguid, COOKIE_RETENTION_TIME);
+          const date = new Date();
+          date.setTime(date.getTime() + COOKIE_RETENTION_TIME);
+          storage.setCookie(COOKIE_KEY_MGUID, response.mguid, date.toUTCString());
         } else {
           storage.setCookie(COOKIE_KEY_MGUID, '', 0);
         }
