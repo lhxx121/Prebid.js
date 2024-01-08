@@ -17,6 +17,7 @@ const COOKIE_KEY_MGUID = '__mguid_';
 const COOKIE_KEY_PMGUID = '__pmguid_';
 const COOKIE_RETENTION_TIME = 365 * 24 * 60 * 60 * 1000; // 1 year
 const COOKY_SYNC_IFRAME_URL = 'https://asset.popin.cc/js/cookieSync.html';
+const THIRD_PARTY_COOKIE_ORIGIN = 'https://asset.popin.cc';
 
 const NATIVERET = {
   id: 'id',
@@ -126,10 +127,8 @@ export const getPmgUID = () => {
   let pmgUid = storage.getCookie(COOKIE_KEY_PMGUID);
   if (!pmgUid) {
     pmgUid = utils.generateUUID();
-    const date = new Date();
-    date.setTime(date.getTime() + COOKIE_RETENTION_TIME);
     try {
-      storage.setCookie(COOKIE_KEY_PMGUID, pmgUid, date.toUTCString());
+      storage.setCookie(COOKIE_KEY_PMGUID, pmgUid, getCurrentTimeToUTCString());
     } catch (e) {}
   }
   return pmgUid;
@@ -293,6 +292,16 @@ function getReferrer(bidRequest = {}, bidderRequest = {}) {
     pageUrl = utils.deepAccess(bidderRequest, 'refererInfo.page');
   }
   return pageUrl;
+}
+
+/**
+ * get current time to UTC string
+ * @returns utc string
+ */
+function getCurrentTimeToUTCString() {
+  const date = new Date();
+  date.setTime(date.getTime() + COOKIE_RETENTION_TIME);
+  return date.toUTCString();
 }
 
 /**
@@ -641,7 +650,7 @@ export const spec = {
 
     if (syncOptions.iframeEnabled) {
       window.addEventListener('message', function handler(event) {
-        if (!event.data || event.origin != 'https://asset.popin.cc') {
+        if (!event.data || event.origin != THIRD_PARTY_COOKIE_ORIGIN) {
           return;
         }
 
@@ -651,9 +660,7 @@ export const spec = {
 
         const response = event.data;
         if (!response.optout && response.mguid) {
-          const date = new Date();
-          date.setTime(date.getTime() + COOKIE_RETENTION_TIME);
-          storage.setCookie(COOKIE_KEY_MGUID, response.mguid, date.toUTCString());
+          storage.setCookie(COOKIE_KEY_MGUID, response.mguid, getCurrentTimeToUTCString());
         } else {
           storage.setCookie(COOKIE_KEY_MGUID, '', 0);
         }
